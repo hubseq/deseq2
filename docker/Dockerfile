@@ -12,6 +12,8 @@ RUN pip install awscli boto3
 RUN echo 'local({r <- getOption("repos"); r["CRAN"] <- "http://cran.r-project.org"; options(repos=r)})' > /.Rprofile
 RUN R -e 'if (!require("BiocManager", quietly = TRUE)) install.packages("BiocManager"); BiocManager::install("DESeq2")'
 RUN R -e 'install.packages("dplyr")'
+RUN apt-get -y install libxtst6 libxt6
+RUN ln -s /usr/local/lib/R/lib/libR.so /lib/x86_64-linux-gnu/libR.so
 
 WORKDIR /
 

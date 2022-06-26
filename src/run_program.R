@@ -47,3 +47,26 @@ dds2 <- DESeqDataSetFromMatrix(countData=countData_group3_vs_4,
 dds2 <- DESeq(dds2)
 res2 <- results(dds2)
 write.csv(res2, file=paste(odir, "deseq2.group3-vs-group4-results.csv", sep=''))
+
+# volcano plots
+jpeg(paste(odir,'deseq2.group1-vs-group2-volcano-plot.jpg', sep=''))
+#reset par
+par(mfrow=c(1,1))
+# Make a basic volcano plot
+with(res, plot(log2FoldChange, -log10(pvalue), pch=20, main="Volcano plot", xlim=c(-3,3)))
+
+# Add colored points: blue if padj<0.01, red if log2FC>1 and padj<0.05)
+with(subset(res, padj<.01 ), points(log2FoldChange, -log10(pvalue), pch=20, col="blue"))
+with(subset(res, padj<.01 & abs(log2FoldChange)>2), points(log2FoldChange, -log10(pvalue), pch=20, col="red"))
+dev.off()
+
+jpeg(paste(odir,'deseq2.group3-vs-group4-volcano-plot.jpg', sep=''))
+#reset par
+par(mfrow=c(1,1))
+# Make a basic volcano plot
+with(res2, plot(log2FoldChange, -log10(pvalue), pch=20, main="Volcano plot", xlim=c(-3,3)))
+
+# Add colored points: blue if padj<0.01, red if log2FC>1 and padj<0.05)
+with(subset(res2, padj<.01 ), points(log2FoldChange, -log10(pvalue), pch=20, col="blue"))
+with(subset(res2, padj<.01 & abs(log2FoldChange)>2), points(log2FoldChange, -log10(pvalue), pch=20, col="red"))
+dev.off()
