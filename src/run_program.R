@@ -10,23 +10,27 @@ print(args[1])
 
 # output_dir
 odir <- args[4]
+group1 <- args[6]
+group2 <- args[8]
 
 # get count and group data into R objects
-countData <- read.csv(args[6], header = TRUE, sep = ",")
+countData <- read.csv(args[10], header = TRUE, sep = ",")
 metaData <- read.csv(args[2], header = TRUE, sep = ",")
-metaData
+print(metaData)
 
 # will create for loop later
-metaData_group1_vs_2 <- filter(metaData, grepl("^group1$", metaData$group) | grepl("^group2$", metaData$group))
-metaData_group3_vs_4 <- filter(metaData, group == "group3" | group == "group4")
-countData_group1_vs_2 <- select(countData, -contains(gsub("-",".",metaData_group3_vs_4$sample_id)))
-countData_group3_vs_4 <- select(countData, -(starts_with(gsub("-",".",metaData_group1_vs_2$sample_id)) & ends_with(gsub("-",".",metaData_group1_vs_2$sample_id))))
+print(paste('"^', group1, '$"', sep=''))
+print(paste('"^', group2, '$"', sep=''))
+metaData_group1_vs_2 <- filter(metaData, grepl(paste('^', group1, '$', sep=''), metaData$group) | grepl(paste('^', group2, '$', sep=''), metaData$group))
+metaData_group_other <- filter(metaData, group != group1 & group != group2)
+countData_group1_vs_2 <- select(countData, -contains(gsub("-",".",metaData_group_other$sample_id)))
 
-metaData_group1_vs_2
-metaData_group3_vs_4
-head(countData)
+print("metaData_group1_vs_2")
+print(metaData_group1_vs_2)
+print("metaData_group_other")
+print(metaData_group_other)
+print("countData_group1_vs_2")
 head(countData_group1_vs_2)
-head(countData_group3_vs_4)
 
 # set up DESeq object and run DESeq
 dds <- DESeqDataSetFromMatrix(countData=countData_group1_vs_2, 
@@ -38,15 +42,14 @@ dds <- DESeq(dds)
 res <- results(dds)
 print("finished first DESeq")
 
+# make gene_id a proper row
+res <- cbind(Row.Names = rownames(res), res)
+rownames(res) <- NULL
+print(colnames(res))
+colnames(res) <- c("gene_id","baseMean","log2FoldChange","lfcSE","stat","pvalue","padj")
+
 # output results as CSV
 write.csv(res, file=paste(odir, "deseq2.group1-vs-group2-results.csv", sep=''))
-
-dds2 <- DESeqDataSetFromMatrix(countData=countData_group3_vs_4,
-                              colData=metaData_group3_vs_4,
-                              design=~group, tidy = TRUE)
-dds2 <- DESeq(dds2)
-res2 <- results(dds2)
-write.csv(res2, file=paste(odir, "deseq2.group3-vs-group4-results.csv", sep=''))
 
 # volcano plots
 jpeg(paste(odir,'deseq2.group1-vs-group2-volcano-plot.jpg', sep=''))
@@ -55,18 +58,7 @@ par(mfrow=c(1,1))
 # Make a basic volcano plot
 with(res, plot(log2FoldChange, -log10(pvalue), pch=20, main="Volcano plot", xlim=c(-3,3)))
 
-# Add colored points: blue if padj<0.01, red if log2FC>1 and padj<0.05)
-with(subset(res, padj<.01 ), points(log2FoldChange, -log10(pvalue), pch=20, col="blue"))
-with(subset(res, padj<.01 & abs(log2FoldChange)>2), points(log2FoldChange, -log10(pvalue), pch=20, col="red"))
-dev.off()
-
-jpeg(paste(odir,'deseq2.group3-vs-group4-volcano-plot.jpg', sep=''))
-#reset par
-par(mfrow=c(1,1))
-# Make a basic volcano plot
-with(res2, plot(log2FoldChange, -log10(pvalue), pch=20, main="Volcano plot", xlim=c(-3,3)))
-
-# Add colored points: blue if padj<0.01, red if log2FC>1 and padj<0.05)
-with(subset(res2, padj<.01 ), points(log2FoldChange, -log10(pvalue), pch=20, col="blue"))
-with(subset(res2, padj<.01 & abs(log2FoldChange)>2), points(log2FoldChange, -log10(pvalue), pch=20, col="red"))
+# Add colored points: blue if padj<0.01, red if log2FC>1 and padj<0.05) - change to pvalue for now
+with(subset(res, pvalue<.01 ), points(log2FoldChange, -log10(pvalue), pch=20, col="blue"))
+with(subset(res, pvalue<.05 & abs(log2FoldChange)>2), points(log2FoldChange, -log10(pvalue), pch=20, col="red"))
 dev.off()
