@@ -1,0 +1,1 @@
+{"container_overrides": {"command": ["--module_name", "deseq2", "--run_arguments", "s3://hubseq-data/modules/deseq2/io/deseq2.8e4c78e9-78a5-4d86-84a4-eccbb3e4b209.io.json", "--working_dir", "/home"]}, "jobqueue": "batch_scratch_queue_public", "jobname": "job_deseq2_8e4c78e9-78a5-4d86-84a4-eccbb3e4b209", "job_submission_timestamp": "2022-06-23 22:21:09.625884"}
